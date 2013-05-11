@@ -79,26 +79,21 @@
 			return traverse("nextSibling", "firstChild", element, selector || null, first || null);
 		},
 		
-		get = function (selector, parent, wrapped) {
+		get = function (selector, parent) {
 			var id = /^#([^ .]+)$/.exec(selector),
 				elements,
 				element;
-				
-			if (parent === true) {
-				wrapped = parent;
-				parent = null;
-			}
 			
 			parent = parent || document;
 			if (id) {
 				element = document.getElementById(id[1]);
-				return (element && (parent === document || contains(parent, element))) ? (wrapped ? amoeba(element) : element) : false;
+				return (element && (parent === document || contains(parent, element))) ? element : false;
 			}
 			elements = getAll(selector, parent);
 			return elements.length && elements[0] || false;
 		},
 		
-		getAll = function (selector, parent, wrapped) {
+		getAll = function (selector, parent) {
 			var elements,
 				nodeSelectors = selector.split(" "),
 				length = nodeSelectors.length,
@@ -110,11 +105,6 @@
 				prev,
 				first,
 				reg = /^[><\^\+\~\-_]$/;
-				
-			if (parent === true) {
-				wrapped = parent;
-				parent = null;
-			}
 				
 			elements = [parent || document];
 			
