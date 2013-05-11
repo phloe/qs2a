@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<style>
+		</style>
+		<script src="../index.js"></script>
+	</head>
+	<body>
+		<div id="page">
+			<h1>qs<sup>2</sup>a Test</h1>
+			<p></p>
+			<div title="ipsum lorem someshit">
+				
+			</div>
+			<div title="ipsum orem someshit">
+				
+			</div>
+			<div title="lorem ipsum someshit">
+				
+			</div>
+			<div title="lorem">
+				
+			</div>
+			<div title="someshit">
+				
+			</div>
+			<div title="ipsum">
+				
+			</div>
+		</div>
+		<script>
+			var page = qs2a.get("div#page");
+			var pageLorems = qs2a.getAll("div#page > h1 ~ div[title*='lorem']");
+			var sups = qs2a.getAll("h1 > sup");
+			if (window.console) {
+				console.log("page", page, "pageLorems", pageLorems, "sups", sups);
+			}
+		</script>
+    </body>
+</html>

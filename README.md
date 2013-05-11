@@ -1,4 +1,4 @@
-qs2a
+qs<sup>2</sup>a
 ====
 
-querySelector/querySelectorAll shim
+querySelector/querySelectorAll/matchesSelector shim
