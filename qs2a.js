@@ -1,12 +1,16 @@
 (function (global, define) {
-    'use strict';
+	'use strict';
 
-    define(function() {
+	define(function() {
 	
 		var doc = global.document,
 			html = doc.documentElement,
 		  	push = Array.prototype.push,
-		  
+			
+			idReg = /^#([^ \.\[]+)$/,
+			selectorReg = /^([^#\.\[]+)?(?:#([^\.\[]+))?(?:\.([^#\[]+))?((?:\[[^\]]+\])+)?$/,
+			attributeReg = /^([a-zA-Z0-9_-]*[^~|^$*!=])(?:([~|^$*!]?)=['"]?([^'"]*)['"]?)?$/,
+			
 		  	getIndex = function (array, value) {
 				var i = array.length;
 				while (i--) if (array[i] === value) break;
@@ -14,7 +18,7 @@
 			},
 			
 			splitSelector = function (selector) {
-				return /^([^#\.\[]+)?(?:#([^\.\[]+))?(?:\.([^#\[]+))?((?:\[[^\]]+\])+)?$/.exec(selector).slice(1);
+				return selectorReg.exec(selector).slice(1);
 			},
 		
 			getElements = function (selector, parent) {
@@ -32,7 +36,7 @@
 						return elements;
 					}
 					if (!selector[0] || selector[0] == "*" || selector[0] == element.nodeName.toLowerCase()) {
-					 	if (contains(parent, element)) {
+					 	if (parent == doc || contains(parent, element)) {
 					 		elements.push(element);
 					 	}
 					}
@@ -76,15 +80,15 @@
 			},
 			
 			getSiblings = function (context, element, selector, first) {
-				return traverse(context + "Sibling", "", element, selector || null, first || null);
+				return traverse(context + "Sibling", "", element, selector, first);
 			},
 			
 			getChildren = function (element, selector, first) {
-				return traverse("nextSibling", "firstChild", element, selector || null, first || null);
+				return traverse("nextSibling", "firstChild", element, selector, first);
 			},
 			
 			get = function (selector, parent) {
-				var id = /^#([^ .]+)$/.exec(selector),
+				var id = idReg.exec(selector),
 					elements,
 					element;
 				
@@ -108,20 +112,20 @@
 					related,
 					prev,
 					first,
-					reg = /^[><\^\+\~\-_]$/;
+					operators = ">+~";
 					
 				elements = [parent || doc];
 				
 				while (i < length) {
 					nodeSelector = nodeSelectors[i];
-					if (!nodeSelector.match(reg)) {
+					if (nodeSelector.length > 1 || operators.indexOf(nodeSelector) === -1) {
 						els = [];
 						l = elements.length;
 						nodeSelector = splitSelector(nodeSelector);
 						j = 0;
 						while (j < l) {
 							element = elements[j++];
-							prev = i > 0 && nodeSelectors[i - 1] || false;
+							prev = i > 0 && nodeSelectors[i - 1];
 							first = false;
 							switch (prev) {
 							
@@ -189,7 +193,7 @@
 					actualValue;
 					
 				while (j--) {
-					attribute = attributes[j].match(/^([a-zA-Z0-9_-]*[^~|^$*!=])(?:([~|^$*!]?)=['"]?([^'"]*)['"]?)?$/);
+					attribute = attributes[j].match(attributeReg);
 					attribute.shift();
 					name = attribute[0];
 					i = elements.length;
