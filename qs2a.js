@@ -58,9 +58,9 @@
 				return elements;
 			},
 			
-			traverse = function (context, start, element, selector, first) {
+			traverse = function (element, selector, first, start) {
 		
-				var next = element[start || context],
+				var next = element[start || "nextSibling"],
 					elements = [],
 					index = 0;
 				
@@ -74,17 +74,9 @@
 						}
 						index++;
 					}
-					next = next[context];
+					next = next.nextSibling;
 				}
 				return elements;
-			},
-			
-			getSiblings = function (context, element, selector, first) {
-				return traverse(context + "Sibling", "", element, selector, first);
-			},
-			
-			getChildren = function (element, selector, first) {
-				return traverse("nextSibling", "firstChild", element, selector, first);
 			},
 			
 			get = function (selector, parent) {
@@ -112,13 +104,13 @@
 					related,
 					prev,
 					first,
-					operators = ">+~";
+					combinators = ">+~";
 					
 				elements = [parent || doc];
 				
 				while (i < length) {
 					nodeSelector = nodeSelectors[i];
-					if (nodeSelector.length > 1 || operators.indexOf(nodeSelector) === -1) {
+					if (nodeSelector.length > 1 || combinators.indexOf(nodeSelector) === -1) {
 						els = [];
 						l = elements.length;
 						nodeSelector = splitSelector(nodeSelector);
@@ -131,7 +123,7 @@
 							
 								// children
 								case ">":
-									related = getChildren(element, nodeSelector, first);
+									related = traverse(element, nodeSelector, first, "firstChild");
 									break;
 								
 								// immediate succeeding sibling
@@ -140,7 +132,7 @@
 									
 								// succeeding siblings
 								case "~":
-									related = getSiblings("next", element, nodeSelector, first);
+									related = traverse(element, nodeSelector, first);
 									break;
 								
 								// any descendants
@@ -262,7 +254,7 @@
 					elements = [elements];
 				}
 				
-				if ("charAt" in selector) {
+				if (selector === selector + "") {
 					selector = splitSelector(selector);
 				}
 				
@@ -296,13 +288,11 @@
 			shim = function () {
 				doc.querySelector = doc.querySelector || get;
 				doc.querySelectorAll = doc.querySelectorAll || getAll;
-				html.matchesSelector = html.matchesSelector || html.mozMatchesSelector || html.webkitMatchesSelector || html.msMatchesSelector || html.oMatchesSelector || match;
 			};
 		
 		return {
 			get: get,
 			getAll: getAll,
-			match: match,
 			shim: shim
 		};
 	});
