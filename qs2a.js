@@ -12,9 +12,13 @@
 			attributeReg = /^([a-zA-Z0-9_-]*[^~|^$*!=])(?:([~|^$*!]?)=['"]?([^'"]*)['"]?)?$/,
 			
 		  	getIndex = function (array, value) {
-				var i = array.length;
-				while (i--) if (array[i] === value) break;
-				return i;
+				var i = 0,
+					l = array.length;
+				while (i < l) {
+					if (array[i] === value) return i;
+					i++;
+				}
+				return -1;
 			},
 			
 			splitSelector = function (selector) {
