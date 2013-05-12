@@ -20,7 +20,7 @@
 			splitSelector = function (selector) {
 				return selectorReg.exec(selector).slice(1);
 			},
-		
+		/*
 			getElements = function (selector, parent) {
 				parent = parent || doc;
 				
@@ -57,28 +57,30 @@
 				
 				return elements;
 			},
-			
-			traverse = function (element, selector, first, start) {
+			*/
+			previous = function (element, selector, first, start) {
 		
-				var next = element[start || "nextSibling"],
-					elements = [],
+				var prev = element.previousSibling,
+					matched,
 					index = 0;
 				
-				while (next) {
-					if (next.nodeType === 1) {
-						if (!selector || (selector && match(next, selector))) {
-							elements.push(next);
+				while (prev) {
+					if (prev.nodeType === 1) {
+						if (!selector || (selector && matchNode(prev, selector))) {
+							matched = prev;
+							break;
 						}
-						if (first && index === 0) {
+						if (first && index > 0) {
+							matched = null;
 							break;
 						}
 						index++;
 					}
-					next = next.nextSibling;
+					prev = prev.previousSibling;
 				}
-				return elements;
+				return matched;
 			},
-			
+			/*
 			get = function (selector, parent) {
 				var id = idReg.exec(selector),
 					elements,
@@ -162,7 +164,7 @@
 				
 				return elements;
 			},
-			
+			*/
 			/*
 			
 				http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
@@ -173,13 +175,11 @@
 					function(parent, element){ return !!(parent.compareDocumentPosition(element) & 16); } :
 		 			function(parent, element){ return parent.contains(element); },
 			
-			attributeMatch = function (elements, attributes) {
+			attributeMatch = function (element, attributes) {
 				var j = attributes.length,
 					attribute,
-					matches = [],
-					m,
+					isMatch = true,
 					name,
-					i,
 					operator,
 					value,
 					actualValue;
@@ -188,101 +188,172 @@
 					attribute = attributes[j].match(attributeReg);
 					attribute.shift();
 					name = attribute[0];
-					i = elements.length;
 					operator = attribute[1];
 					value = attribute[2];
-					while (i--) {
-						actualValue = elements[i].getAttribute(name);
-						m = matches[i] !== false;
-						if (actualValue !== null && m) {
-						 	if (value) {
-								switch (operator) {
+					actualValue = element.getAttribute(name);
+					if (actualValue !== null) {
+					 	if (value) {
+							switch (operator) {
+							
+								case "~":
+									isMatch = (getIndex(actualValue.split(" "), value) > -1);
+									break;
+							
+								case "|":
+									isMatch = (actualValue === value || actualValue.indexOf(value + "-") === 0);
+									break;
 								
-									case "~":
-										m = (getIndex(actualValue.split(" "), value) > -1);
-										break;
+								case "^":
+									isMatch = (actualValue.indexOf(value) === 0);
+									break;
 								
-									case "|":
-										m = (actualValue === value || actualValue.indexOf(value + "-") === 0);
-										break;
+								case "$":
+									isMatch = (actualValue.indexOf(value) === actualValue.length - value.length);
+									break;
+								
+								case "*":
+									isMatch = (actualValue.indexOf(value) > -1);
+									break;
+								
+								case "!":
+									isMatch = (actualValue !== value);
+									break;
 									
-									case "^":
-										m = (actualValue.indexOf(value) === 0);
-										break;
+								default:
+									isMatch = (actualValue === value);
+									break;
 									
-									case "$":
-										m = (actualValue.indexOf(value) === actualValue.length - value.length);
-										break;
-									
-									case "*":
-										m = (actualValue.indexOf(value) > -1);
-										break;
-									
-									case "!":
-										m = (actualValue !== value);
-										break;
-										
-									default:
-										m = (actualValue === value);
-										break;
-										
-								}
 							}
 						}
-						else if (m) {
-							m = false;
-						}
-						if (!m) {
-							matches[i] = m;
-						}
+					}
+					else {
+						return false;
+					}
+					if (!isMatch) {
+						return false;
 					}
 				}
 				
-				return matches;
+				return isMatch;
 			},
 			
-			match = function (elements, selector) {
-				var single = ("nodeType" in elements),
-					values = [],
-					i,
-					attributes;
-				
-				if (single) {
-					if ("nodeType" in selector) {
-						return (elements === selector);
-					}
-					elements = [elements];
+			cache = {},
+			
+			nodeCache = {},
+			
+			matchNode = function (element, selector) {
+				if (typeof selector == "string") {
+					selector = nodeCache[selector] || (nodeCache[selector] = splitSelector(selector));
 				}
 				
-				if (selector === selector + "") {
-					selector = splitSelector(selector);
+				if (selector[0] && (selector[0] != "*" && selector[0] != element.nodeName.toLowerCase())) {
+					return false;
 				}
 				
-				attributes = (selector[3]) ? selector[3].slice(1, -1).split("][") : [];
-				
-				i = elements.length;
-				
-				if (selector[1]) {
-					attributes.unshift("id='" + selector[1] + "'");
+				if (selector[1] && element.getAttribute("id") != selector[1]) {
+					return false;
 				}
-				if (selector[2]) {
-					attributes.unshift("class~='" + selector[2] + "'");
+				if (selector[2] && getIndex(element.className.split(" "), selector[2]) == -1) {
+					return false;
 				}
+				
+				var attributes = (selector[3]) ? selector[3].slice(1, -1).split("][") : [];
 			
 				if (attributes.length) {
-					values = attributeMatch(elements, attributes);
+					return attributeMatch(element, attributes);
 				}
 				
+				return true;
+			},
+			
+			get = function (selector, parent) {
+				var matches = getAll(selector);
+				if (matches.length) {
+					return matches[0];
+				}
+				return null;
+			},
+			
+			getAll = function (selector, parent) {
+				selector = cache[selector] || (cache[selector] = selector.split(" "));
+				
+				var last = selector[selector.length - 1];
+				last = nodeCache[last] || (nodeCache[last] = splitSelector(last));
+				
+				var elements = (parent || doc).getElementsByTagName(last[0] || "*");
+		
+				return matchAll(elements, selector);
+			},
+			
+			matchSingle = function (element, selector) {
+				if (typeof selector == "string") {
+					selector = cache[selector] || (cache[selector] = selector.split(" "));
+				}
+				var i = selector.length,
+					l = i - 1,
+					nodeSelector, first;
 				while (i--) {
-					if (values[i] !== false && (selector[0] && (selector[0] != "*" && selector[0] != elements[i].nodeName.toLowerCase()))) {
-						values[i] = false;
+					nodeSelector = selector[i];
+					first = false;
+					switch (nodeSelector) {
+						
+						// immediate succeeding sibling
+						case "+":
+							first = true;
+							
+						// succeeding siblings
+						case "~":
+							nodeSelector = selector[--i];
+							element = previous(element, nodeSelector, first);
+							break;
+							
+						// children
+						case ">":
+							nodeSelector = selector[--i];
+							element = element.parentNode;
+							if (element && !matchNode(element, nodeSelector)) {
+								return false;
+							}
+							break;
+						
+						// any descendants
+						default:
+							//element = element.parentNode;
+							while (element) {
+								if (matchNode(element, nodeSelector)) {
+									break;
+								}
+								else if (i == l) {
+									return false;
+								}
+								else {
+									element = element.parentNode;
+								}
+							}
+							break;
 					}
-					else if (!(i in values)) {
-						values[i] = true;
+					if (!element) {
+						return false;
 					}
 				}
-				
-				return (single) ? values[0] : values;
+				return true;
+			},
+			
+			matchAll = function (elements, selector) {
+				if (typeof selector == "string") {
+					selector = cache[selector] || (cache[selector] = selector.split(" "));
+				}
+				var matches = [],
+					element,
+					i = 0,
+					l = elements.length;
+				while (i < l) {
+					element = elements[i++];
+					if (matchSingle(element, selector)) {
+						matches.push(element);
+					}
+				}
+				return matches;
 			},
 			
 			shim = function () {
