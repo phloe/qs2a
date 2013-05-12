@@ -20,44 +20,13 @@
 			splitSelector = function (selector) {
 				return selectorReg.exec(selector).slice(1);
 			},
-		/*
-			getElements = function (selector, parent) {
-				parent = parent || doc;
-				
-				var elements = [],
-					element,
-					nodes,
-					values,
-					i;
-					
-				if (selector[1]) {
-					element = doc.getElementById(selector[1]);
-					if (!element) {
-						return elements;
-					}
-					if (!selector[0] || selector[0] == "*" || selector[0] == element.nodeName.toLowerCase()) {
-					 	if (parent == doc || contains(parent, element)) {
-					 		elements.push(element);
-					 	}
-					}
-				}
-				else {
-					nodes = parent.getElementsByTagName(selector[0] || "*");
-					push.apply(elements, nodes);
-				}
-				
-				values = match(elements, selector);
-				i = elements.length;
-					
-				while (i--) {
-					if (!values[i]) {
-						elements.splice(i, 1);
-					}
-				}
-				
-				return elements;
-			},
-			*/
+			
+			selCache = {},
+			
+			nodeCache = {},
+			
+			attrCache = {},
+			
 			previous = function (element, selector, first, start) {
 		
 				var prev = element.previousSibling,
@@ -80,91 +49,7 @@
 				}
 				return matched;
 			},
-			/*
-			get = function (selector, parent) {
-				var id = idReg.exec(selector),
-					elements,
-					element;
-				
-				parent = parent || doc;
-				if (id) {
-					element = doc.getElementById(id[1]);
-					return (element && (parent === doc || contains(parent, element))) ? element : false;
-				}
-				elements = getAll(selector, parent);
-				return elements.length && elements[0] || false;
-			},
 			
-			getAll = function (selector, parent) {
-				var elements,
-					nodeSelectors = selector.split(" "),
-					length = nodeSelectors.length,
-					nodeSelector,
-					i = 0, j = 0, l,
-					element,
-					els,
-					related,
-					prev,
-					first,
-					combinators = ">+~";
-					
-				elements = [parent || doc];
-				
-				while (i < length) {
-					nodeSelector = nodeSelectors[i];
-					if (nodeSelector.length > 1 || combinators.indexOf(nodeSelector) === -1) {
-						els = [];
-						l = elements.length;
-						nodeSelector = splitSelector(nodeSelector);
-						j = 0;
-						while (j < l) {
-							element = elements[j++];
-							prev = i > 0 && nodeSelectors[i - 1];
-							first = false;
-							switch (prev) {
-							
-								// children
-								case ">":
-									related = traverse(element, nodeSelector, first, "firstChild");
-									break;
-								
-								// immediate succeeding sibling
-								case "+":
-									first = true;
-									
-								// succeeding siblings
-								case "~":
-									related = traverse(element, nodeSelector, first);
-									break;
-								
-								// any descendants
-								default:
-									related = getElements(nodeSelector, element);
-									break;
-									
-							}
-							if (related.length) {
-								push.apply(els, related);
-							}
-						}
-						elements = els;
-						
-						if (i !== 0 && !(i === 1 && prev && prev.match(reg))) {
-							j = elements.length;
-							while (j--) {
-								if (getIndex(elements, elements[j]) < j) {
-									elements.splice(j, 1);
-								}
-							}
-						}
-							
-					}
-					i++;
-				}
-				
-				return elements;
-			},
-			*/
 			/*
 			
 				http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
@@ -185,8 +70,8 @@
 					actualValue;
 					
 				while (j--) {
-					attribute = attributes[j].match(attributeReg);
-					attribute.shift();
+					attribute = attributes[j];
+					attribute = attrCache[attribute] || (attrCache[attribute] = attribute.match(attributeReg).slice(1));
 					name = attribute[0];
 					operator = attribute[1];
 					value = attribute[2];
@@ -237,10 +122,6 @@
 				return isMatch;
 			},
 			
-			cache = {},
-			
-			nodeCache = {},
-			
 			matchNode = function (element, selector) {
 				if (typeof selector == "string") {
 					selector = nodeCache[selector] || (nodeCache[selector] = splitSelector(selector));
@@ -275,7 +156,7 @@
 			},
 			
 			getAll = function (selector, parent) {
-				selector = cache[selector] || (cache[selector] = selector.split(" "));
+				selector = selCache[selector] || (selCache[selector] = selector.split(" "));
 				
 				var last = selector[selector.length - 1];
 				last = nodeCache[last] || (nodeCache[last] = splitSelector(last));
@@ -287,7 +168,7 @@
 			
 			matchSingle = function (element, selector) {
 				if (typeof selector == "string") {
-					selector = cache[selector] || (cache[selector] = selector.split(" "));
+					selector = selCache[selector] || (selCache[selector] = selector.split(" "));
 				}
 				var i = selector.length,
 					l = i - 1,
@@ -341,7 +222,7 @@
 			
 			matchAll = function (elements, selector) {
 				if (typeof selector == "string") {
-					selector = cache[selector] || (cache[selector] = selector.split(" "));
+					selector = selCache[selector] || (selCache[selector] = selector.split(" "));
 				}
 				var matches = [],
 					element,
