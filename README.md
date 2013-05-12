@@ -1,7 +1,7 @@
 qs<sup>2</sup>a
 ====
 
-A simple selector engine that also provides querySelector/querySelectorAll shims.
+A simple selector engine that also provides document.querySelector/document.querySelectorAll shims.
 
 ###### Features
 
