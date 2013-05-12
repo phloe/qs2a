@@ -31,10 +31,26 @@
 			</div>
 		</div>
 		<script>
-			var start = new Date();
-			var page = qs2a.get("div#page");
-			var pageLorems = qs2a.getAll("div#page > h1 ~ div[title*='lorem']");
-			var sups = qs2a.getAll("h1 > sup");
+			var start, page, pageLorems, sups, loops = 1000, i;
+				
+			start = new Date();
+			i = loops;
+			while (i--) {
+				page = qs2a.get("div#page");
+				pageLorems = qs2a.getAll("div#page > h1 ~ div[title*='lorem']");
+				sups = qs2a.getAll("h1 > sup");
+			}
+			if (window.console) {
+				console.log("time", new Date() - start, "page", page, "pageLorems", pageLorems, "sups", sups);
+			}
+			
+			start = new Date();
+			i = loops;
+			while (i--) {
+				page = document.querySelector("div#page");
+				pageLorems = document.querySelectorAll("div#page > h1 ~ div[title*='lorem']");
+				sups = document.querySelectorAll("h1 > sup");
+			}
 			if (window.console) {
 				console.log("time", new Date() - start, "page", page, "pageLorems", pageLorems, "sups", sups);
 			}
