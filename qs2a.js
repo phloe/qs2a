@@ -131,18 +131,23 @@
 					selector = nodeCache[selector] || (nodeCache[selector] = splitSelector(selector));
 				}
 				
-				if (selector[0] && (selector[0] != "*" && selector[0] != element.nodeName.toLowerCase())) {
+				var tag = selector[0],
+					id = selector[1],
+					className = selector[2],
+					attributes = selector[3];
+				
+				if (tag && (tag != "*" && tag != element.nodeName.toLowerCase())) {
 					return false;
 				}
 				
-				if (selector[1] && element.getAttribute("id") != selector[1]) {
+				if (id && element.getAttribute("id") != id) {
 					return false;
 				}
-				if (selector[2] && getIndex(element.className.split(" "), selector[2]) == -1) {
+				if (className && getIndex(element.className.split(" "), className) == -1) {
 					return false;
 				}
 				
-				var attributes = (selector[3]) ? selector[3].slice(1, -1).split("][") : [];
+				attributes = (attributes) ? attributes.slice(1, -1).split("][") : [];
 			
 				if (attributes.length) {
 					return attributeMatch(element, attributes);
