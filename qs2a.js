@@ -14,9 +14,11 @@
 			
 			selCache = {},
 			
-			nodeCache = {},
+			selNodeCache = {},
 			
 			attrCache = {},
+			
+			attrNodeCache = {},
 			
 			/*
 			
@@ -40,7 +42,19 @@
 		}
 		
 		function splitSelector (selector) {
-			return selectorReg.exec(selector).slice(1);
+			return selCache[selector] || (selCache[selector] = selector.split(" "));
+		}
+		
+		function splitNodeSelector (selector) {
+			return selNodeCache[selector] || (selNodeCache[selector] = selectorReg.exec(selector).slice(1));
+		}
+		
+		function splitAttribute (attribute) {
+			return attrNodeCache[attribute] || (attrNodeCache[attribute] = attribute.match(attributeReg).slice(1));
+		}
+		
+		function splitAttributes (attributes) {
+			return attrNodeCache[attributes] || (attrNodeCache[attributes] = attributes ? attributes.slice(1, -1).split("][") : []);
 		}
 		
 		function previous (element, selector, stopAtFirst) {
@@ -75,8 +89,7 @@
 				actualValue;
 				
 			while (j--) {
-				attribute = attributes[j];
-				attribute = attrCache[attribute] || (attrCache[attribute] = attribute.match(attributeReg).slice(1));
+				attribute = splitAttribute(attributes[j]);
 				name = attribute[0];
 				operator = attribute[1];
 				value = attribute[2];
@@ -140,7 +153,7 @@
 		
 		function matchNode (element, selector) {
 			if (typeof selector == "string") {
-				selector = nodeCache[selector] || (nodeCache[selector] = splitSelector(selector));
+				selector = splitNodeSelector(selector);
 			}
 			
 			var tag = selector[0],
@@ -186,10 +199,10 @@
 		}
 		
 		function getAll (selector, parent) {
-			selector = selCache[selector] || (selCache[selector] = selector.split(" "));
+			selector = splitSelector(selector);
 			
 			var last = selector[selector.length - 1];
-			last = nodeCache[last] || (nodeCache[last] = splitSelector(last));
+			last = splitNodeSelector(last);
 			
 			var elements = (parent || doc).getElementsByTagName(last[0] || "*");
 	
@@ -198,7 +211,7 @@
 		
 		function matchSingle (element, selector) {
 			if (typeof selector == "string") {
-				selector = selCache[selector] || (selCache[selector] = selector.split(" "));
+				selector = splitSelector(selector);
 			}
 			var i = selector.length,
 				l = i - 1,
@@ -252,7 +265,7 @@
 		
 		function matchAll (elements, selector) {
 			if (typeof selector == "string") {
-				selector = selCache[selector] || (selCache[selector] = selector.split(" "));
+				selector = splitSelector(selector);
 			}
 			var matches = [],
 				element,

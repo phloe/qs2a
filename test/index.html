@@ -6,6 +6,7 @@
 		<style>
 		</style>
 		<script src="../qs2a.js"></script>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	</head>
 	<body>
 		<div id="page">
@@ -31,8 +32,61 @@
 			</div>
 		</div>
 		<script>
+			
+			
+			function node (element) {
+				var tag = element.nodeName.toLowerCase(),
+					id = "", className = "",
+					attrs = element.attributes,
+					attr,
+					parts = [];
+					i = attrs.length;
+				while (i--) {
+					attr = attrs[i];
+					if (attr.name == "id" && attr.value) {
+						id = "#" + attr.value;
+					}
+					else if (attr.name == "id" && attr.value) {
+						className = "." + attr.value.split(/\s+/).join(".");
+					}
+					else {
+						//parts.push("[" + attr.name + "='" + attr.value + "']");
+					}
+				}
+				return tag + id + className + parts.join("");
+			}
+			
+			function nodes (elements) {
+				var selectors = [],
+					i = 0,
+					l = elements.length;
+				while (i < l) {
+					selectors.push(node(elements[i++]));
+				}
+				return selectors.join(", ");
+			}
+			
 			var start, page, pageLorems, sups, loops = 1000, i;
-				
+			
+			
+			start = new Date();
+			i = loops;
+			while (i--) {
+				page = jQuery("div#page");
+				pageLorems = jQuery("div#page > h1 ~ div[title*='lorem']");
+				sups = jQuery("h1 > sup");
+			}
+			if (window.console) {
+				console.log("time", new Date() - start, "page", page, "pageLorems", pageLorems, "sups", sups);
+			}
+			else {
+				alert("time: " + (new Date() - start) + "\n"
+					+ "page: " + node(page[0]) + "\n"
+					+ "pageLorems:" + nodes(pageLorems.toArray()) + "\n"
+					+ "sups:" + nodes(sups.toArray())
+				);
+			}
+			
 			start = new Date();
 			i = loops;
 			while (i--) {
@@ -43,16 +97,25 @@
 			if (window.console) {
 				console.log("time", new Date() - start, "page", page, "pageLorems", pageLorems, "sups", sups);
 			}
-			
-			start = new Date();
-			i = loops;
-			while (i--) {
-				page = document.querySelector("div#page");
-				pageLorems = document.querySelectorAll("div#page > h1 ~ div[title*='lorem']");
-				sups = document.querySelectorAll("h1 > sup");
+			else {
+				alert("time: " + (new Date() - start) + "\n"
+					+ "page: " + node(page) + "\n"
+					+ "pageLorems:" + nodes(pageLorems) + "\n"
+					+ "sups:" + nodes(sups)
+				);
 			}
-			if (window.console) {
-				console.log("time", new Date() - start, "page", page, "pageLorems", pageLorems, "sups", sups);
+			
+			if (document.querySelector) {
+				start = new Date();
+				i = loops;
+				while (i--) {
+					page = document.querySelector("div#page");
+					pageLorems = document.querySelectorAll("div#page > h1 ~ div[title*='lorem']");
+					sups = document.querySelectorAll("h1 > sup");
+				}
+				if (window.console) {
+					console.log("time", new Date() - start, "page", page, "pageLorems", pageLorems, "sups", sups);
+				}
 			}
 		</script>
     </body>

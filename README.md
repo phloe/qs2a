@@ -1,4 +1,4 @@
-qs<sup>2</sup>a
+![qs<sup>2</sup>a](http://dev.phloe.net/qs2a/img/logotype.png)
 ====
 
 A simple selector engine that also provides document.querySelector/document.querySelectorAll shims.
