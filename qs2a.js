@@ -3,39 +3,35 @@
 
 	define(function() {
 	
-		var doc = global.document,
-			html = doc.documentElement,
-		  	push = Array.prototype.push,
+		var doc = global.document;
+		var html = doc.documentElement;
 			
-			idReg = /^#([^ \.\[]+)$/,
-			selectorReg = /^([^#\.\[]+)?(?:#([^\.\[]+))?(?:\.([^#\[]+))?((?:\[[^\]]+\])+)?$/,
-			attributeReg = /^([a-zA-Z0-9_-]*[^~|^$*!=])(?:([~|^$*!]?)=['"]?([^'"]*)['"]?)?$/,
+		var idReg = /^#([^ \.\[]+)$/;
+		var selectorReg = /^([^#\.\[]+)?(?:#([^\.\[]+))?(?:\.([^#\[]+))?((?:\[[^\]]+\])+)?$/;
+		var attributeReg = /^([a-zA-Z0-9_-]*[^~|^$*!=])(?:([~|^$*!]?)=['"]?([^'"]*)['"]?)?$/;
 			
+		var selCache = {};
+		var selNodeCache = {};
+		var attrNodeCache = {};
 			
-			selCache = {},
+		/*
+		
+			http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
+		
+		*/
 			
-			selNodeCache = {},
-			
-			attrCache = {},
-			
-			attrNodeCache = {},
-			
-			/*
-			
-				http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
-			
-			*/
-			
-			contains = (global.Node && Node.prototype && !Node.prototype.contains) ?
-					function containsShim (parent, element){ return !!(parent.compareDocumentPosition(element) & 16); } :
-		 			function containsNative (parent, element){ return parent.contains(element); };
+		var contains = (global.Node && Node.prototype && !Node.prototype.contains) ?
+			function containsShim (parent, element){ return !!(parent.compareDocumentPosition(element) & 16); } :
+			function containsNative (parent, element){ return parent.contains(element); };
 
 			
-	  	function getIndex (array, value) {
-			var i = 0,
-				l = array.length;
+		function getIndex (array, value) {
+			var i = 0;
+			var l = array.length;
 			while (i < l) {
-				if (array[i] === value) return i;
+				if (array[i] === value) {
+					return i;
+				}
 				i++;
 			}
 			return -1;
@@ -53,15 +49,11 @@
 			return attrNodeCache[attribute] || (attrNodeCache[attribute] = attribute.match(attributeReg).slice(1));
 		}
 		
-		function splitAttributes (attributes) {
-			return attrNodeCache[attributes] || (attrNodeCache[attributes] = attributes ? attributes.slice(1, -1).split("][") : []);
-		}
-		
 		function previous (element, selector, stopAtFirst) {
 	
-			var prev = element.previousSibling,
-				matched,
-				index = 0;
+			var prev = element.previousSibling;
+			var matched;
+			var index = 0;
 			
 			while (prev) {
 				if (prev.nodeType === 1) {
@@ -81,12 +73,8 @@
 		}
 		
 		function attributeMatch (element, attributes) {
-			var j = attributes.length,
-				attribute,
-				name,
-				operator,
-				value,
-				actualValue;
+			var j = attributes.length;
+			var attribute, name, operator, value, actualValue;
 				
 			while (j--) {
 				attribute = splitAttribute(attributes[j]);
@@ -98,11 +86,11 @@
 					return false;
 				}
 				else {
-				 	if (value) {
+					if (value) {
 						switch (operator) {
 						
 							case "~":
-								if (!(getIndex(actualValue.split(" "), value) > -1)) {
+								if (getIndex(actualValue.split(" "), value) === -1) {
 									return false;
 								}
 								break;
@@ -114,31 +102,31 @@
 								break;
 							
 							case "^":
-								if (!(actualValue.indexOf(value) === 0)) {
+								if (actualValue.indexOf(value) !== 0) {
 									return false;
 								}
 								break;
 							
 							case "$":
-								if (!(actualValue.indexOf(value) === actualValue.length - value.length)) {
+								if (actualValue.indexOf(value) !== actualValue.length - value.length) {
 									return false;
 								}
 								break;
 							
 							case "*":
-								if (!(actualValue.indexOf(value) > -1)) {
+								if (actualValue.indexOf(value) === -1) {
 									return false;
 								}
 								break;
 							
 							case "!":
-								if (!(actualValue !== value)) {
+								if (actualValue === value) {
 									return false;
 								}
 								break;
 								
 							default:
-								if (!(actualValue === value)) {
+								if (actualValue !== value) {
 									return false;
 								}
 								break;
@@ -156,19 +144,19 @@
 				selector = splitNodeSelector(selector);
 			}
 			
-			var tag = selector[0],
-				id = selector[1],
-				className = selector[2],
-				attributes = selector[3];
+			var tag = selector[0];
+			var id = selector[1];
+			var className = selector[2];
+			var attributes = selector[3];
 			
-			if (tag && (tag != "*" && tag != element.nodeName.toLowerCase())) {
+			if (tag && (tag !== "*" && tag !== element.nodeName.toLowerCase())) {
 				return false;
 			}
 			
-			if (id && element.getAttribute("id") != id) {
+			if (id && element.getAttribute("id") !== id) {
 				return false;
 			}
-			if (className && getIndex(element.className.split(" "), className) == -1) {
+			if (className && getIndex(element.className.split(" "), className) === -1) {
 				return false;
 			}
 			
@@ -182,9 +170,8 @@
 		}
 		
 		function get (selector, parent) {
-				var id = idReg.exec(selector),
-					elements,
-					element;
+			var id = idReg.exec(selector);
+			var element;
 					
 			parent = parent || doc;
 			if (id) {
@@ -210,12 +197,12 @@
 		}
 		
 		function matchSingle (element, selector) {
-			if (typeof selector == "string") {
+			if (typeof selector === "string") {
 				selector = splitSelector(selector);
 			}
-			var i = selector.length,
-				l = i - 1,
-				nodeSelector, stopAtFirst;
+			var i = selector.length;
+			var l = i - 1;
+			var nodeSelector, stopAtFirst;
 			while (i--) {
 				nodeSelector = selector[i];
 				stopAtFirst = false;
@@ -264,13 +251,13 @@
 		}
 		
 		function matchAll (elements, selector) {
-			if (typeof selector == "string") {
+			if (typeof selector === "string") {
 				selector = splitSelector(selector);
 			}
-			var matches = [],
-				element,
-				i = 0,
-				l = elements.length;
+			var matches = [];
+			var element;
+			var i = 0;
+			var l = elements.length;
 			while (i < l) {
 				element = elements[i++];
 				if (matchSingle(element, selector)) {
@@ -292,4 +279,4 @@
 		};
 	});
 
-}(this, typeof define == 'function' && define.amd ? define : function(factory) { this.qs2a = factory() } ));
+}(this, typeof define === "function" && define.amd ? define : function(factory) { this.qs2a = factory(); } ));
