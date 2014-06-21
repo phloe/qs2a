@@ -4,7 +4,6 @@
 	define(function() {
 	
 		var doc = global.document;
-		var html = doc.documentElement;
 			
 		var idReg = /^#([^ \.\[]+)$/;
 		var selectorReg = /^([^#\.\[]+)?(?:#([^\.\[]+))?(?:\.([^#\[]+))?((?:\[[^\]]+\])+)?$/;
@@ -140,7 +139,7 @@
 		}
 		
 		function matchNode (element, selector) {
-			if (typeof selector == "string") {
+			if (typeof selector === "string") {
 				selector = splitNodeSelector(selector);
 			}
 			
@@ -234,7 +233,7 @@
 							if (matchNode(element, nodeSelector)) {
 								break;
 							}
-							else if (i == l) {
+							else if (i === l) {
 								return false;
 							}
 							else {
